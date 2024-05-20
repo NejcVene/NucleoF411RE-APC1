@@ -12,10 +12,16 @@
 #include <stdint.h>
 #include <string.h>
 
-#define APC1_Convert(low, high)		(((uint16_t) low << 8) | high)
+#define APC1_Convert(low, high)			(((uint16_t) low << 8) | high)
 
-#define BUFFER_SIZE		100
-#define COMMAND_LENGHT	7
+#define BUFFER_SIZE						100
+#define COMMAND_LENGHT					7
+#define RESERVED_OUTPUT_REGISTER		0x20
+#define RS0_OUTPUT_REGISTER				0x2A
+#define AQI_OUTPUT_REGISTER				0X3A
+#define CHECKSUM_LOW_OUTPUT_REGISTER	62
+#define CHECKSUM_HIGH_OUTPUT_REGISTER	63
+#define SUM_OF_VALUES					62
 
 enum APC1_Status {
 	APC1_ERROR_CRC = 0b10000000,

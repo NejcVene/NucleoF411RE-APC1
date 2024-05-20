@@ -107,7 +107,7 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
 
 	while (received_response == 0);
 
-	if (APC1_Check_Checksum(62, 62, 63) == APC1_ERROR_CRC) {
+	if (APC1_Check_Checksum(SUM_OF_VALUES, CHECKSUM_LOW_OUTPUT_REGISTER, CHECKSUM_HIGH_OUTPUT_REGISTER) == APC1_ERROR_CRC) {
 		return APC1_ERROR_CRC;
 	}
 
@@ -115,14 +115,14 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
 
 	uint16_t index = 4, i = 0;
 	uint16_t *struct_member = &processed_data.pm1_0;
-	while (index < 42) {
-		if (index == 0x20) { // skip reserved two bytes in output data at address 0x20
+	while (index < RS0_OUTPUT_REGISTER) {
+		if (index == RESERVED_OUTPUT_REGISTER) { // skip reserved two bytes in output data at address 0x20
 			index += 2;
 		}
 		struct_member[i++] = APC1_Convert(buffer[index], buffer[index + 1]);
 		index += 2;
 	}
-	processed_data.aqi = buffer[58];
+	processed_data.aqi = buffer[AQI_OUTPUT_REGISTER];
 
 	return APC1_OK;
 

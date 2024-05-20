@@ -37,15 +37,15 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_rnglists 000005bc  00000000  00000000  0002ad40  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_macro  0001555c  00000000  00000000  0002b2fc  2**0
+ 17 .debug_macro  00015580  00000000  00000000  0002b2fc  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   00009608  00000000  00000000  00040858  2**0
+ 18 .debug_line   00009608  00000000  00000000  0004087c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    00085199  00000000  00000000  00049e60  2**0
+ 19 .debug_str    0008523b  00000000  00000000  00049e84  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_frame  00001d68  00000000  00000000  000ceffc  2**2
+ 20 .debug_frame  00001d68  00000000  00000000  000cf0c0  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000079  00000000  00000000  000d0d64  2**0
+ 21 .debug_line_str 00000079  00000000  00000000  000d0e28  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -452,7 +452,7 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
  800055c:	2b00      	cmp	r3, #0
  800055e:	d0fb      	beq.n	8000558 <APC1_Read_Mea_Data+0x34>
 
-	if (APC1_Check_Checksum(62, 62, 63) == APC1_ERROR_CRC) {
+	if (APC1_Check_Checksum(SUM_OF_VALUES, CHECKSUM_LOW_OUTPUT_REGISTER, CHECKSUM_HIGH_OUTPUT_REGISTER) == APC1_ERROR_CRC) {
  8000560:	223f      	movs	r2, #63	; 0x3f
  8000562:	213e      	movs	r1, #62	; 0x3e
  8000564:	203e      	movs	r0, #62	; 0x3e
@@ -475,9 +475,9 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
 	uint16_t *struct_member = &processed_data.pm1_0;
  800057c:	4b1b      	ldr	r3, [pc, #108]	; (80005ec <APC1_Read_Mea_Data+0xc8>)
  800057e:	603b      	str	r3, [r7, #0]
-	while (index < 42) {
+	while (index < RS0_OUTPUT_REGISTER) {
  8000580:	e01c      	b.n	80005bc <APC1_Read_Mea_Data+0x98>
-		if (index == 0x20) {
+		if (index == RESERVED_OUTPUT_REGISTER) { // skip reserved two bytes in output data at address 0x20
  8000582:	88fb      	ldrh	r3, [r7, #6]
  8000584:	2b20      	cmp	r3, #32
  8000586:	d102      	bne.n	800058e <APC1_Read_Mea_Data+0x6a>
@@ -511,12 +511,12 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
  80005b6:	88fb      	ldrh	r3, [r7, #6]
  80005b8:	3302      	adds	r3, #2
  80005ba:	80fb      	strh	r3, [r7, #6]
-	while (index < 42) {
+	while (index < RS0_OUTPUT_REGISTER) {
  80005bc:	88fb      	ldrh	r3, [r7, #6]
  80005be:	2b29      	cmp	r3, #41	; 0x29
  80005c0:	d9df      	bls.n	8000582 <APC1_Read_Mea_Data+0x5e>
 	}
-	processed_data.aqi = buffer[58];
+	processed_data.aqi = buffer[AQI_OUTPUT_REGISTER];
  80005c2:	4b06      	ldr	r3, [pc, #24]	; (80005dc <APC1_Read_Mea_Data+0xb8>)
  80005c4:	f893 203a 	ldrb.w	r2, [r3, #58]	; 0x3a
  80005c8:	4b08      	ldr	r3, [pc, #32]	; (80005ec <APC1_Read_Mea_Data+0xc8>)
