@@ -18,9 +18,9 @@
 ../Core/Src/apc1.c:222:10:APC1_Get_Particles_GT_10	4	static
 ../Core/Src/apc1.c:228:10:APC1_Get_TVOC	4	static
 ../Core/Src/apc1.c:234:10:APC1_Get_eCO2	4	static
-../Core/Src/apc1.c:240:10:APC1_Get_T_Comp	4	static
-../Core/Src/apc1.c:246:10:APC1_Get_RH_Comp	4	static
-../Core/Src/apc1.c:252:10:APC1_Get_T_Raw	4	static
-../Core/Src/apc1.c:258:10:APC1_Get_RH_Raw	4	static
+../Core/Src/apc1.c:240:8:APC1_Get_T_Comp	8	static
+../Core/Src/apc1.c:246:8:APC1_Get_RH_Comp	8	static
+../Core/Src/apc1.c:252:8:APC1_Get_T_Raw	8	static
+../Core/Src/apc1.c:258:8:APC1_Get_RH_Raw	8	static
 ../Core/Src/apc1.c:264:9:APC1_Get_AQI	4	static
 ../Core/Src/apc1.c:270:6:HAL_UART_RxCpltCallback	16	static

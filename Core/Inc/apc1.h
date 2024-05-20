@@ -74,10 +74,10 @@ uint16_t APC1_Get_Particles_GT_5_0(void);
 uint16_t APC1_Get_Particles_GT_10(void);
 uint16_t APC1_Get_TVOC(void);
 uint16_t APC1_Get_eCO2(void);
-uint16_t APC1_Get_T_Comp(void);
-uint16_t APC1_Get_RH_Comp(void);
-uint16_t APC1_Get_T_Raw(void);
-uint16_t APC1_Get_RH_Raw(void);
+double APC1_Get_T_Comp(void);
+double APC1_Get_RH_Comp(void);
+double APC1_Get_T_Raw(void);
+double APC1_Get_RH_Raw(void);
 uint8_t	APC1_Get_AQI(void);
 
 extern void Error_Handler(void);

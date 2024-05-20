@@ -237,27 +237,27 @@ uint16_t APC1_Get_eCO2(void) {
 
 }
 
-uint16_t APC1_Get_T_Comp(void) {
+double APC1_Get_T_Comp(void) {
 
-	return processed_data.t_comp;
-
-}
-
-uint16_t APC1_Get_RH_Comp(void) {
-
-	return processed_data.rh_comp;
+	return processed_data.t_comp * 0.1f;
 
 }
 
-uint16_t APC1_Get_T_Raw(void) {
+double APC1_Get_RH_Comp(void) {
 
-	return processed_data.t_raw;
+	return processed_data.rh_comp * 0.1f;
 
 }
 
-uint16_t APC1_Get_RH_Raw(void) {
+double APC1_Get_T_Raw(void) {
 
-	return processed_data.rh_raw;
+	return processed_data.t_raw * 0.1f;
+
+}
+
+double APC1_Get_RH_Raw(void) {
+
+	return processed_data.rh_raw * 0.1f;
 
 }
 
