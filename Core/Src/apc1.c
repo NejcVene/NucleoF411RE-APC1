@@ -115,7 +115,10 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
 
 	uint16_t index = 4, i = 0;
 	uint16_t *struct_member = &processed_data.pm1_0;
-	while (index < 40) {
+	while (index < 42) {
+		if (index == 0x20) { // skip reserved two bytes in output data at address 0x20
+			index += 2;
+		}
 		struct_member[i++] = APC1_Convert(buffer[index], buffer[index + 1]);
 		index += 2;
 	}
