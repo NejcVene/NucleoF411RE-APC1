@@ -32,7 +32,13 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+uint16_t 	 T_pm1_0, T_pm2_5, T_pm10,
+  	  	  	 T_pm1_0_air, T_pm2_5_air, T_pm10_air,
+			 T_particles_0_3, T_particles_0_5, T_particles_1_0,
+			 T_particles_2_5, T_particles_5_0, T_particles_10,
+			 T_TVOC, T_eCO2;
+double T_t_comp, T_rh_comp, T_t_raw, T_rh_raw;
+  uint8_t T_aqi;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -93,9 +99,9 @@ int main(void)
 
   // APC1_Read_Module_Type();
 
-  if (APC1_Read_Mea_Data() != APC1_OK) {
-	  Error_Handler();
-  }
+  // if (APC1_Read_Mea_Data() != APC1_OK) {
+//	  Error_Handler();
+  //}
 
   // remove later
   // HAL_Delay(3000);
@@ -116,6 +122,30 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  if (APC1_Read_Mea_Data() != APC1_OK) {
+		  Error_Handler();
+	  }
+	  T_pm1_0 = APC1_Get_PM1_0();
+	  T_pm2_5 = APC1_Get_PM2_5();
+	  T_pm10 = APC1_Get_PM10();
+	  T_pm1_0_air = APC1_Get_PM1_0_air();
+	  T_pm2_5_air = APC1_Get_PM2_5_air();
+	  T_pm10_air = APC1_Get_PM10_air();
+	  T_particles_0_3 = APC1_Get_Particles_GT_0_3();
+	  T_particles_0_5 = APC1_Get_Particles_GT_0_5();
+	  T_particles_1_0 = APC1_Get_Particles_GT_1_0();
+	  T_particles_2_5 = APC1_Get_Particles_GT_2_5();
+	  T_particles_5_0 = APC1_Get_Particles_GT_5_0();
+	  T_particles_10 = APC1_Get_Particles_GT_10();
+	  T_TVOC = APC1_Get_TVOC();
+	  T_eCO2 = APC1_Get_eCO2();
+	  T_t_comp = APC1_Get_T_Comp();
+	  T_rh_comp = APC1_Get_RH_Comp();
+	  T_t_raw = APC1_Get_T_Raw();
+	  T_rh_raw = APC1_Get_RH_Raw();
+	  T_aqi = APC1_Get_AQI();
+	  HAL_Delay(2000);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

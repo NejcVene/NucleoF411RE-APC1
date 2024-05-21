@@ -75,7 +75,7 @@ HAL_StatusTypeDef APC1_Send_Command(UART_HandleTypeDef *huart, uint8_t *command)
 
 HAL_StatusTypeDef APC1_Receive_Response(UART_HandleTypeDef *huart, uint8_t *buffer, uint16_t size) {
 
-	memset(buffer, 0, BUFFER_SIZE);
+	// memset(buffer, 0, BUFFER_SIZE);
 	return HAL_UART_Receive_IT(huart, buffer, size);
 
 }
@@ -106,6 +106,7 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
 	}
 
 	while (received_response == 0);
+	received_response = 0;
 
 	if (APC1_Check_Checksum(SUM_OF_VALUES, CHECKSUM_LOW_OUTPUT_REGISTER, CHECKSUM_HIGH_OUTPUT_REGISTER) == APC1_ERROR_CRC) {
 		return APC1_ERROR_CRC;
