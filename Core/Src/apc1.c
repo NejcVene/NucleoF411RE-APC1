@@ -66,6 +66,13 @@ enum APC1_Status APC1_Check_For_Error(void);
 uint8_t buffer[BUFFER_SIZE] = {0};
 volatile int received_response;
 struct APC1_Mea_Data processed_data;
+const char *APC1_AQI_Strings[5] = {
+		"Good",
+		"Fair",
+		"Poor",
+		"Very poor",
+		"Extremely Poor"
+};
 
 HAL_StatusTypeDef APC1_Send_Command(UART_HandleTypeDef *huart, uint8_t *command) {
 
@@ -268,6 +275,14 @@ double APC1_Get_RH_Raw(void) {
 uint8_t	APC1_Get_AQI(void) {
 
 	return processed_data.aqi;
+
+}
+
+const char *APC1_Get_AQI_String(void) {
+
+	// if somehow we get a wrong index
+	uint8_t index = APC1_Get_AQI();
+	return (index <= 5 && index >= 1) ? APC1_AQI_Strings[index - 1] : "Error";
 
 }
 

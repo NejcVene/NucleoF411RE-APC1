@@ -38,6 +38,7 @@ uint16_t 	 T_pm1_0, T_pm2_5, T_pm10,
 			 T_particles_2_5, T_particles_5_0, T_particles_10,
 			 T_TVOC, T_eCO2;
 double T_t_comp, T_rh_comp, T_t_raw, T_rh_raw;
+const char *aqi_string;
   uint8_t T_aqi;
 /* USER CODE END PD */
 
@@ -144,6 +145,7 @@ int main(void)
 	  T_t_raw = APC1_Get_T_Raw();
 	  T_rh_raw = APC1_Get_RH_Raw();
 	  T_aqi = APC1_Get_AQI();
+	  aqi_string = APC1_Get_AQI_String();
 	  HAL_Delay(2000);
 
     /* USER CODE END WHILE */

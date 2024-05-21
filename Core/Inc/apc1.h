@@ -85,6 +85,7 @@ double APC1_Get_RH_Comp(void);
 double APC1_Get_T_Raw(void);
 double APC1_Get_RH_Raw(void);
 uint8_t	APC1_Get_AQI(void);
+const char *APC1_Get_AQI_String(void);
 
 extern void Error_Handler(void);
 extern UART_HandleTypeDef huart1;
