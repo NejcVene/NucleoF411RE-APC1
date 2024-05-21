@@ -22,7 +22,13 @@
 #define ERROR_OUTPUT_REGISTER			0x3D
 #define CHECKSUM_LOW_OUTPUT_REGISTER	62
 #define CHECKSUM_HIGH_OUTPUT_REGISTER	63
-#define SUM_OF_VALUES					62
+#define SUM_OF_VALUES_MEA				62
+#define ANSWER_FRAME_LENGTH_L			3
+#define ANSWER_CMD						4
+#define	ANSWER_DATA						5
+#define SUM_OF_VALUES_CMD				6
+#define CHECKSUM_LOW_CMD_ANSWER			6
+#define CHECKSUM_HIGH_CMD_ANSWER		7
 
 enum APC1_Status {
 	APC1_OK = 0,
@@ -34,6 +40,7 @@ enum APC1_Status {
 	APC1_ERROR_VOC = 0b00100000,
 	APC1_ERROR_RHT = 0b01000000,
 	APC1_ERROR_CRC = 0b10000000,
+	APC1_ERROR_CMD
 };
 
 enum APC1_Commands {
@@ -67,6 +74,10 @@ struct APC1_Mea_Data {
 
 enum APC1_Status APC1_Read_Module_Type(void);
 enum APC1_Status APC1_Read_Mea_Data(void);
+enum APC1_Status APC1_Set_Idle_Mode(void);
+enum APC1_Status APC1_Set_Active_Comm_Mode(void); // device to send 64B structure every second
+enum APC1_Status APC1_Set_Mea_Mode(void);
+enum APC1_Status APC1_Set_Passive_Comm_Mode(void); // device to send 64B structure on request
 uint16_t APC1_Get_PM1_0(void);
 uint16_t APC1_Get_PM2_5(void);
 uint16_t APC1_Get_PM10(void);
