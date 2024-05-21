@@ -39,6 +39,7 @@ uint16_t 	 T_pm1_0, T_pm2_5, T_pm10,
 			 T_TVOC, T_eCO2;
 double T_t_comp, T_rh_comp, T_t_raw, T_rh_raw;
 const char *aqi_string;
+const char *error_string;
   uint8_t T_aqi;
 /* USER CODE END PD */
 
@@ -146,6 +147,7 @@ int main(void)
 	  T_rh_raw = APC1_Get_RH_Raw();
 	  T_aqi = APC1_Get_AQI();
 	  aqi_string = APC1_Get_AQI_String();
+	  error_string = APC1_Get_Error_String();
 	  HAL_Delay(2000);
 
     /* USER CODE END WHILE */
@@ -286,6 +288,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+	  error_string = APC1_Get_Error_String();
   }
   /* USER CODE END Error_Handler_Debug */
 }

@@ -65,6 +65,7 @@ enum APC1_Status APC1_Check_For_Error(void);
 
 uint8_t buffer[BUFFER_SIZE] = {0};
 volatile int received_response;
+volatile int err;
 struct APC1_Mea_Data processed_data;
 const char *APC1_AQI_Strings[5] = {
 		"Good",
@@ -72,6 +73,17 @@ const char *APC1_AQI_Strings[5] = {
 		"Poor",
 		"Very poor",
 		"Extremely Poor"
+};
+const char *APC1_Status_Strings[] = {
+		"APC1_OK",
+		"APC1_ERROR_TOO_MANY_FAN_RESTARTS",
+		"APC1_ERROR_FAN_SPEED_LOW",
+		"APC1_ERROR_PHOTODIODE",
+		"APC1_ERROR_FAN_STOPPED",
+		"APC1_ERROR_LASER",
+		"APC1_ERROR_VOC",
+		"APC1_ERROR_RHT",
+		"APC1_ERROR_CRC"
 };
 
 HAL_StatusTypeDef APC1_Send_Command(UART_HandleTypeDef *huart, uint8_t *command) {
@@ -82,7 +94,7 @@ HAL_StatusTypeDef APC1_Send_Command(UART_HandleTypeDef *huart, uint8_t *command)
 
 HAL_StatusTypeDef APC1_Receive_Response(UART_HandleTypeDef *huart, uint8_t *buffer, uint16_t size) {
 
-	// memset(buffer, 0, BUFFER_SIZE);
+	memset(buffer, 0, BUFFER_SIZE);
 	return HAL_UART_Receive_IT(huart, buffer, size);
 
 }
@@ -104,6 +116,8 @@ enum APC1_Status APC1_Read_Module_Type(void) {
 
 enum APC1_Status APC1_Read_Mea_Data(void) {
 
+	enum APC1_Status errorStat;
+
 	if (APC1_Receive_Response(&huart1, buffer, command[APC1_CMD_READ_MEA_DATA].response_size) != HAL_OK) {
 		Error_Handler();
 	}
@@ -115,11 +129,14 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
 	while (received_response == 0);
 	received_response = 0;
 
-	if (APC1_Check_Checksum(SUM_OF_VALUES, CHECKSUM_LOW_OUTPUT_REGISTER, CHECKSUM_HIGH_OUTPUT_REGISTER) == APC1_ERROR_CRC) {
-		return APC1_ERROR_CRC;
+	if ((errorStat = APC1_Check_Checksum(SUM_OF_VALUES, CHECKSUM_LOW_OUTPUT_REGISTER, CHECKSUM_HIGH_OUTPUT_REGISTER)) != APC1_OK) {
+		err = 8;
+		return errorStat;
 	}
 
-	// if (APC1_Check_For_Error())
+	if ((errorStat = APC1_Check_For_Error()) != APC1_OK) {
+		return errorStat;
+	}
 
 	uint16_t index = 4, i = 0;
 	uint16_t *struct_member = &processed_data.pm1_0;
@@ -149,18 +166,41 @@ enum APC1_Status APC1_Check_Checksum(int limit, int low, int high) {
 
 enum APC1_Status APC1_Check_For_Error(void) {
 
-	/*
-	switch (buffer[61]) {
-		case value:
-
+	// TODO: needs fix for multiple errors
+	switch (buffer[ERROR_OUTPUT_REGISTER]) {
+		case APC1_ERROR_TOO_MANY_FAN_RESTARTS:
+			err = 1;
+			return APC1_ERROR_TOO_MANY_FAN_RESTARTS;
+			break;
+		case APC1_ERROR_FAN_SPEED_LOW:
+			err = 2;
+			return APC1_ERROR_FAN_SPEED_LOW;
+			break;
+		case APC1_ERROR_PHOTODIODE:
+			err = 3;
+			return APC1_ERROR_PHOTODIODE;
+			break;
+		case APC1_ERROR_FAN_STOPPED:
+			err = 4;
+			return APC1_ERROR_FAN_STOPPED;
+			break;
+		case APC1_ERROR_LASER:
+			err = 5;
+			return APC1_ERROR_LASER;
+			break;
+		case APC1_ERROR_VOC:
+			err = 6;
+			return APC1_ERROR_VOC;
+			break;
+		case APC1_ERROR_RHT:
+			err = 7;
+			return APC1_ERROR_RHT;
 			break;
 		default:
+			err = 0;
 			return APC1_OK;
 			break;
 	}
-	*/
-
-	return APC1_OK;
 
 }
 
@@ -283,6 +323,12 @@ const char *APC1_Get_AQI_String(void) {
 	// if somehow we get a wrong index
 	uint8_t index = APC1_Get_AQI();
 	return (index <= 5 && index >= 1) ? APC1_AQI_Strings[index - 1] : "Error";
+
+}
+
+const char *APC1_Get_Error_String(void) {
+
+	return APC1_Status_Strings[err];
 
 }
 
