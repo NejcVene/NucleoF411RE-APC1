@@ -58,8 +58,7 @@ struct APC1_Command_Settings command[APC1_NUM_OF_CMD] = {
 		},
 };
 
-HAL_StatusTypeDef APC1_Send_Command(UART_HandleTypeDef *huart, uint8_t *command);
-HAL_StatusTypeDef APC1_Receive_Response(UART_HandleTypeDef *huart, uint8_t *buffer, uint16_t size);
+HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct APC1_Command_Settings setting);
 enum APC1_Status APC1_Check_Checksum(int limit, int low, int high);
 enum APC1_Status APC1_Check_For_Error(void);
 enum APC1_Status APC1_Check_Command_Answer(struct APC1_Command_Settings setting);
@@ -87,31 +86,31 @@ const char *APC1_Status_Strings[] = {
 		"APC1_ERROR_CRC"
 };
 
-HAL_StatusTypeDef APC1_Send_Command(UART_HandleTypeDef *huart, uint8_t *command) {
+HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct APC1_Command_Settings setting) {
 
-	return HAL_UART_Transmit(huart, command, COMMAND_LENGHT, 2000);
-
-}
-
-HAL_StatusTypeDef APC1_Receive_Response(UART_HandleTypeDef *huart, uint8_t *buffer, uint16_t size) {
+	HAL_StatusTypeDef status;
 
 	memset(buffer, 0, BUFFER_SIZE);
-	return HAL_UART_Receive_IT(huart, buffer, size);
+	if ((status = HAL_UART_Receive_IT(huart, buffer, setting.response_size)) != HAL_OK) {
+		return status;
+	}
+	if ((status = HAL_UART_Transmit(huart, setting.cmd, COMMAND_LENGHT, 2000)) != HAL_OK) {
+		return status;
+	}
+
+	return status;
 
 }
-
 
 enum APC1_Status APC1_Read_Module_Type(void) {
 
-	if (APC1_Receive_Response(&huart1, buffer, command[APC1_CMD_READ_MODULE_TYPE].response_size) != HAL_OK) {
-		Error_Handler();
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_READ_MODULE_TYPE]) != HAL_OK) {
+		return APC1_ERROR_CMD;
 	}
+	while (received_response == 0);
+	received_response = 0;
 
-	if (APC1_Send_Command(&huart1, command[APC1_CMD_READ_MODULE_TYPE].cmd) != HAL_OK) {
-		Error_Handler();
-	}
-
-	return APC1_OK;
+	return APC1_Check_Checksum(SUM_OF_VALUES_FW, CHECKSUM_LOW_FW, CHEKCSUM_HIGH_FW);
 
 }
 
@@ -119,14 +118,9 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
 
 	enum APC1_Status errorStat;
 
-	if (APC1_Receive_Response(&huart1, buffer, command[APC1_CMD_READ_MEA_DATA].response_size) != HAL_OK) {
-		Error_Handler();
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_READ_MEA_DATA]) != HAL_OK) {
+		return APC1_ERROR_CMD;
 	}
-
-	if (APC1_Send_Command(&huart1, command[APC1_CMD_READ_MEA_DATA].cmd) != HAL_OK) {
-		Error_Handler();
-	}
-
 	while (received_response == 0);
 	received_response = 0;
 
@@ -207,15 +201,9 @@ enum APC1_Status APC1_Check_For_Error(void) {
 
 enum APC1_Status APC1_Set_Idle_Mode(void) {
 
-	// TODO: common part of receive and send to separate function
-	if (APC1_Receive_Response(&huart1, buffer, command[APC1_CMD_SET_IDLE_MODE].response_size) != HAL_OK) {
-		Error_Handler();
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_IDLE_MODE]) != HAL_OK) {
+		return APC1_ERROR_CMD;
 	}
-
-	if (APC1_Send_Command(&huart1, command[APC1_CMD_SET_IDLE_MODE].cmd) != HAL_OK) {
-		Error_Handler();
-	}
-
 	while (received_response == 0);
 	received_response = 0;
 
@@ -224,8 +212,14 @@ enum APC1_Status APC1_Set_Idle_Mode(void) {
 }
 
 enum APC1_Status APC1_Set_Active_Comm_Mode(void) {
-	// TODO: implement command
-	;
+
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_ACTIVE_COMM]) != HAL_OK) {
+		return APC1_ERROR_CMD;
+	}
+	while (received_response == 0);
+	received_response = 0;
+
+	return APC1_Check_Command_Answer(command[APC1_CMD_SET_ACTIVE_COMM]);
 
 }
 
@@ -235,9 +229,9 @@ enum APC1_Status APC1_Set_Mea_Mode(void) {
 	//	Error_Handler();
 	//}
 
-	if (APC1_Send_Command(&huart1, command[APC1_CMD_SET_MEA_MODE].cmd) != HAL_OK) {
-		Error_Handler();
-	}
+	// if (APC1_Send_Command(&huart1, command[APC1_CMD_SET_MEA_MODE].cmd) != HAL_OK) {
+	//	Error_Handler();
+	//}
 
 	// TODO: no response here? Maybe something with "active" communication mode
 	// while (received_response == 0);
@@ -249,14 +243,9 @@ enum APC1_Status APC1_Set_Mea_Mode(void) {
 
 enum APC1_Status APC1_Set_Passive_Comm_Mode(void) {
 
-	if (APC1_Receive_Response(&huart1, buffer, command[APC1_CMD_SET_PASSIVE_COMM].response_size) != HAL_OK) {
-		Error_Handler();
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_PASSIVE_COMM]) != HAL_OK) {
+		return APC1_ERROR_CMD;
 	}
-
-	if (APC1_Send_Command(&huart1, command[APC1_CMD_SET_PASSIVE_COMM].cmd) != HAL_OK) {
-		Error_Handler();
-	}
-
 	while (received_response == 0);
 	received_response = 0;
 

@@ -29,6 +29,10 @@
 #define SUM_OF_VALUES_CMD				6
 #define CHECKSUM_LOW_CMD_ANSWER			6
 #define CHECKSUM_HIGH_CMD_ANSWER		7
+#define FW_ANSWER_FRAME_LENGTH_L		0x03
+#define CHECKSUM_LOW_FW					0x15
+#define	CHEKCSUM_HIGH_FW				0x16
+#define SUM_OF_VALUES_FW				0x15
 
 enum APC1_Status {
 	APC1_OK = 0,
