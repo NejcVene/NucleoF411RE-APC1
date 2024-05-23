@@ -93,10 +93,8 @@ HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct AP
 	HAL_StatusTypeDef status;
 
 	memset(buffer, 0, BUFFER_SIZE);
-	if (get_response) {
-		if ((status = HAL_UART_Receive_IT(huart, buffer, setting.response_size)) != HAL_OK) {
-			return status;
-		}
+	if (get_response && (status = HAL_UART_Receive_IT(huart, buffer, setting.response_size)) != HAL_OK) {
+		return status;
 	}
 	if ((status = HAL_UART_Transmit(huart, setting.cmd, COMMAND_LENGHT, 2000)) != HAL_OK) {
 		return status;
@@ -116,8 +114,7 @@ enum APC1_Status APC1_Read_Module_Type(void) {
 	while (received_response == 0);
 	received_response = 0;
 
-
-	if((status = APC1_Check_Checksum(SUM_OF_VALUES_FW, CHECKSUM_LOW_FW, CHEKCSUM_HIGH_FW)) != APC1_OK) {
+	if ((status = APC1_Check_Checksum(SUM_OF_VALUES_FW, CHECKSUM_LOW_FW, CHECKSUM_HIGH_FW)) != APC1_OK) {
 		return status;
 	}
 	dev_settings.fw_vesion = buffer[FW_ANSWER_FW_VERSION];

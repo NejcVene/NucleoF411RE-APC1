@@ -39,13 +39,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  17 .debug_macro  000155da  00000000  00000000  0002b823  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   00009873  00000000  00000000  00040dfd  2**0
+ 18 .debug_line   0000987f  00000000  00000000  00040dfd  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    0008552c  00000000  00000000  0004a670  2**0
+ 19 .debug_str    0008552c  00000000  00000000  0004a67c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_frame  00001f24  00000000  00000000  000cfb9c  2**2
+ 20 .debug_frame  00001f24  00000000  00000000  000cfba8  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000079  00000000  00000000  000d1ac0  2**0
+ 21 .debug_line_str 00000079  00000000  00000000  000d1acc  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -676,11 +676,10 @@ HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct AP
  800085c:	2100      	movs	r1, #0
  800085e:	4813      	ldr	r0, [pc, #76]	; (80008ac <APC1_Send_Receive_Command+0x60>)
  8000860:	f002 ff30 	bl	80036c4 <memset>
-	if (get_response) {
+	if (get_response && (status = HAL_UART_Receive_IT(huart, buffer, setting.response_size)) != HAL_OK) {
  8000864:	6a3b      	ldr	r3, [r7, #32]
  8000866:	2b00      	cmp	r3, #0
  8000868:	d00d      	beq.n	8000886 <APC1_Send_Receive_Command+0x3a>
-		if ((status = HAL_UART_Receive_IT(huart, buffer, setting.response_size)) != HAL_OK) {
  800086a:	7abb      	ldrb	r3, [r7, #10]
  800086c:	b29b      	uxth	r3, r3
  800086e:	461a      	mov	r2, r3
@@ -692,10 +691,9 @@ HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct AP
  800087c:	7dfb      	ldrb	r3, [r7, #23]
  800087e:	2b00      	cmp	r3, #0
  8000880:	d001      	beq.n	8000886 <APC1_Send_Receive_Command+0x3a>
-			return status;
+		return status;
  8000882:	7dfb      	ldrb	r3, [r7, #23]
  8000884:	e00e      	b.n	80008a4 <APC1_Send_Receive_Command+0x58>
-		}
 	}
 	if ((status = HAL_UART_Transmit(huart, setting.cmd, COMMAND_LENGHT, 2000)) != HAL_OK) {
  8000886:	4639      	mov	r1, r7
