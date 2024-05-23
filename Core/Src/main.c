@@ -100,13 +100,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // HAL_Delay(10000);
-  // APC1_Set_Idle_Mode();
-  // HAL_Delay(10000);
-  // APC1_Set_Mea_Mode();
+  APC1_Set_Idle_Mode();
+  HAL_Delay(10000);
+  APC1_Set_Mea_Mode();
   // HAL_Delay(2000);
-  if (APC1_Read_Module_Type() != APC1_OK)
-	  Error_Handler();
-
+  // if (APC1_Read_Module_Type() != APC1_OK)
+  //	  Error_Handler();
+  //if (APC1_Set_Active_Comm_Mode() != APC1_OK)
+  //Error_Handler();
   // APC1_Read_Module_Type();
 
   // if (APC1_Read_Mea_Data() != APC1_OK) {

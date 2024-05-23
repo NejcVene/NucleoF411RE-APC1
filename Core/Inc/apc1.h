@@ -20,6 +20,7 @@
 #define RS0_OUTPUT_REGISTER				0x2A
 #define AQI_OUTPUT_REGISTER				0X3A
 #define ERROR_OUTPUT_REGISTER			0x3D
+#define VERSION_OUTPUT_REGISTER			0x3C
 #define CHECKSUM_LOW_OUTPUT_REGISTER	62
 #define CHECKSUM_HIGH_OUTPUT_REGISTER	63
 #define SUM_OF_VALUES_MEA				62
@@ -30,9 +31,12 @@
 #define CHECKSUM_LOW_CMD_ANSWER			6
 #define CHECKSUM_HIGH_CMD_ANSWER		7
 #define FW_ANSWER_FRAME_LENGTH_L		0x03
+#define	FW_ANSWER_FW_VERSION			0x13
 #define CHECKSUM_LOW_FW					0x15
 #define	CHEKCSUM_HIGH_FW				0x16
 #define SUM_OF_VALUES_FW				0x15
+#define	GET_RESPONSE					1
+#define NO_RESPONSE						0
 
 enum APC1_Status {
 	APC1_OK = 0,
@@ -57,6 +61,11 @@ enum APC1_Commands {
 	APC1_NUM_OF_CMD // number of supported commands
 };
 
+enum APC1_Mode {
+	APC1_PASSIVE_MODE,
+	APC1_ACTIVE_MODE
+};
+
 struct APC1_Command_Settings {
 	uint8_t cmd[COMMAND_LENGHT],
 			da_frame_lenght_l,
@@ -74,6 +83,11 @@ struct APC1_Mea_Data {
 			 rh_comp, t_raw, rh_raw;
 	uint8_t aqi;
 
+};
+
+struct APC1_Device_Settings {
+	enum APC1_Mode mode;
+	uint8_t fw_vesion;
 };
 
 enum APC1_Status APC1_Read_Module_Type(void);

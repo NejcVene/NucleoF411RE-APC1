@@ -58,15 +58,17 @@ struct APC1_Command_Settings command[APC1_NUM_OF_CMD] = {
 		},
 };
 
-HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct APC1_Command_Settings setting);
+HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct APC1_Command_Settings setting, int get_response);
 enum APC1_Status APC1_Check_Checksum(int limit, int low, int high);
 enum APC1_Status APC1_Check_For_Error(void);
 enum APC1_Status APC1_Check_Command_Answer(struct APC1_Command_Settings setting);
+enum APC1_Status APC1_Process_Mea_Data(void);
 
 uint8_t buffer[BUFFER_SIZE] = {0};
 volatile int received_response;
 volatile int err;
 struct APC1_Mea_Data processed_data;
+struct APC1_Device_Settings dev_settings = {.mode = APC1_PASSIVE_MODE, .fw_vesion = 0};
 const char *APC1_AQI_Strings[5] = {
 		"Good",
 		"Fair",
@@ -86,13 +88,15 @@ const char *APC1_Status_Strings[] = {
 		"APC1_ERROR_CRC"
 };
 
-HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct APC1_Command_Settings setting) {
+HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct APC1_Command_Settings setting, int get_response) {
 
 	HAL_StatusTypeDef status;
 
 	memset(buffer, 0, BUFFER_SIZE);
-	if ((status = HAL_UART_Receive_IT(huart, buffer, setting.response_size)) != HAL_OK) {
-		return status;
+	if (get_response) {
+		if ((status = HAL_UART_Receive_IT(huart, buffer, setting.response_size)) != HAL_OK) {
+			return status;
+		}
 	}
 	if ((status = HAL_UART_Transmit(huart, setting.cmd, COMMAND_LENGHT, 2000)) != HAL_OK) {
 		return status;
@@ -104,25 +108,39 @@ HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct AP
 
 enum APC1_Status APC1_Read_Module_Type(void) {
 
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_READ_MODULE_TYPE]) != HAL_OK) {
+	enum APC1_Status status;
+
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_READ_MODULE_TYPE], GET_RESPONSE) != HAL_OK) {
 		return APC1_ERROR_CMD;
 	}
 	while (received_response == 0);
 	received_response = 0;
 
-	return APC1_Check_Checksum(SUM_OF_VALUES_FW, CHECKSUM_LOW_FW, CHEKCSUM_HIGH_FW);
+
+	if((status = APC1_Check_Checksum(SUM_OF_VALUES_FW, CHECKSUM_LOW_FW, CHEKCSUM_HIGH_FW)) != APC1_OK) {
+		return status;
+	}
+	dev_settings.fw_vesion = buffer[FW_ANSWER_FW_VERSION];
+
+	return status;
 
 }
 
 enum APC1_Status APC1_Read_Mea_Data(void) {
 
-	enum APC1_Status errorStat;
-
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_READ_MEA_DATA]) != HAL_OK) {
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_READ_MEA_DATA], GET_RESPONSE) != HAL_OK) {
 		return APC1_ERROR_CMD;
 	}
 	while (received_response == 0);
 	received_response = 0;
+
+	return APC1_Process_Mea_Data();
+
+}
+
+enum APC1_Status APC1_Process_Mea_Data(void) {
+
+	enum APC1_Status errorStat;
 
 	if ((errorStat = APC1_Check_Checksum(SUM_OF_VALUES_MEA, CHECKSUM_LOW_OUTPUT_REGISTER, CHECKSUM_HIGH_OUTPUT_REGISTER)) != APC1_OK) {
 		err = 8;
@@ -143,6 +161,7 @@ enum APC1_Status APC1_Read_Mea_Data(void) {
 		index += 2;
 	}
 	processed_data.aqi = buffer[AQI_OUTPUT_REGISTER];
+	dev_settings.fw_vesion = buffer[VERSION_OUTPUT_REGISTER];
 
 	return APC1_OK;
 
@@ -201,7 +220,7 @@ enum APC1_Status APC1_Check_For_Error(void) {
 
 enum APC1_Status APC1_Set_Idle_Mode(void) {
 
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_IDLE_MODE]) != HAL_OK) {
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_IDLE_MODE], GET_RESPONSE) != HAL_OK) {
 		return APC1_ERROR_CMD;
 	}
 	while (received_response == 0);
@@ -213,29 +232,30 @@ enum APC1_Status APC1_Set_Idle_Mode(void) {
 
 enum APC1_Status APC1_Set_Active_Comm_Mode(void) {
 
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_ACTIVE_COMM]) != HAL_OK) {
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_ACTIVE_COMM], GET_RESPONSE) != HAL_OK) {
 		return APC1_ERROR_CMD;
 	}
 	while (received_response == 0);
 	received_response = 0;
+	dev_settings.mode = APC1_ACTIVE_MODE;
 
 	return APC1_Check_Command_Answer(command[APC1_CMD_SET_ACTIVE_COMM]);
 
 }
 
+// TODO: still a mystery what happens in active mode
 enum APC1_Status APC1_Set_Mea_Mode(void) {
 
-	//if (APC1_Receive_Response(&huart1, buffer, command[APC1_CMD_SET_MEA_MODE].response_size) != HAL_OK) {
-	//	Error_Handler();
-	//}
-
-	// if (APC1_Send_Command(&huart1, command[APC1_CMD_SET_MEA_MODE].cmd) != HAL_OK) {
-	//	Error_Handler();
-	//}
-
-	// TODO: no response here? Maybe something with "active" communication mode
-	// while (received_response == 0);
-	// received_response = 0;
+	// if device mode is ACTIVE, then there is a response, otherwise not
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_MEA_MODE],
+		(dev_settings.mode) ? GET_RESPONSE : NO_RESPONSE) != HAL_OK) {
+		return APC1_ERROR_CMD;
+	}
+	if (dev_settings.mode) {
+		while (received_response == 0);
+		received_response = 0;
+		return APC1_Process_Mea_Data();
+	}
 
 	return APC1_OK;
 
@@ -243,11 +263,12 @@ enum APC1_Status APC1_Set_Mea_Mode(void) {
 
 enum APC1_Status APC1_Set_Passive_Comm_Mode(void) {
 
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_PASSIVE_COMM]) != HAL_OK) {
+	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_PASSIVE_COMM], GET_RESPONSE) != HAL_OK) {
 		return APC1_ERROR_CMD;
 	}
 	while (received_response == 0);
 	received_response = 0;
+	dev_settings.mode = APC1_PASSIVE_MODE;
 
 	return APC1_Check_Command_Answer(command[APC1_CMD_SET_PASSIVE_COMM]);
 
