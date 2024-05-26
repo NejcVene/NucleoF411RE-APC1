@@ -13,8 +13,9 @@
 #include <string.h>
 
 #define APC1_Convert(low, high)			(((uint16_t) low << 8) | high)
+#define APC1_Error_Buffer_Append(buffer, index)	strcat(buffer, APC1_Status_Strings[index])
 
-#define BUFFER_SIZE						100
+#define BUFFER_SIZE						256
 #define COMMAND_LENGHT					7
 #define RESERVED_OUTPUT_REGISTER		0x20
 #define RS0_OUTPUT_REGISTER				0x2A
@@ -37,6 +38,7 @@
 #define SUM_OF_VALUES_FW				0x15
 #define	GET_RESPONSE					1
 #define NO_RESPONSE						0
+#define NUM_OF_ERRORS					9
 
 enum APC1_Status {
 	APC1_OK = 0,
@@ -48,7 +50,7 @@ enum APC1_Status {
 	APC1_ERROR_VOC = 0b00100000,
 	APC1_ERROR_RHT = 0b01000000,
 	APC1_ERROR_CRC = 0b10000000,
-	APC1_ERROR_CMD
+	APC1_ERROR_CMD,
 };
 
 enum APC1_Commands {
@@ -116,7 +118,7 @@ double APC1_Get_T_Raw(void);
 double APC1_Get_RH_Raw(void);
 uint8_t	APC1_Get_AQI(void);
 const char *APC1_Get_AQI_String(void);
-const char *APC1_Get_Error_String(void);
+char *APC1_Get_Error_String(void);
 
 extern void Error_Handler(void);
 extern UART_HandleTypeDef huart1;
