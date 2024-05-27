@@ -66,7 +66,6 @@ enum APC1_Status APC1_Process_Mea_Data(void);
 
 uint8_t buffer[BUFFER_SIZE];
 char error_buffer[BUFFER_SIZE];
-volatile int received_response;
 struct APC1_Device_Settings dev_settings;
 struct APC1_Mea_Data processed_data;
 const char *APC1_AQI_Strings[5] = {
@@ -103,6 +102,24 @@ const uint8_t APC1_Error_Masks[] = {
 		APC1_ERROR_CMD
 };
 
+/**
+  * @brief  Receives an amount of data in non blocking mode.
+  * @note   When UART parity is not enabled (PCE = 0), and Word Length is configured to 9 bits (M1-M0 = 01),
+  *         the received data is handled as a set of u16. In this case, Size must indicate the number
+  *         of u16 available through pData.
+  * @param  huart Pointer to a UART_HandleTypeDef structure that contains
+  *               the configuration information for the specified UART module.
+  * @param  pData Pointer to data buffer (u8 or u16 data elements).
+  * @param  Size  Amount of data elements (u8 or u16) to be received.
+  * @retval HAL status
+  */
+
+/**
+  * @brief  Initializes the APC1 sensor.
+  * @param  huart Pointer to a UART_HandleTypeDef structure that contains
+  *               the configuration information for the specified UART module.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Init_Sensor(UART_HandleTypeDef *huart) {
 
 	if (huart == NULL) {
@@ -112,13 +129,22 @@ enum APC1_Status APC1_Init_Sensor(UART_HandleTypeDef *huart) {
 	dev_settings = (struct APC1_Device_Settings) {
 			.sensor_uart = huart,
 			.mode = APC1_PASSIVE_MODE,
-			.fw_vesion = 0
+			.fw_vesion = 0,
+			.received_response = 0
 	};
 
 	return APC1_OK;
 
 }
 
+/**
+  * @brief  Sends and receives an amount of data specified by setting.
+  * @param  huart Pointer to a UART_HandleTypeDef structure that contains
+  *               the configuration information for the specified UART module.
+  * @param  setting	Struct element describing the command and its parameters.
+  * @param  get_response  Indicating to receive or ignore response of executed command.
+  * @retval HAL status
+  */
 HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct APC1_Command_Settings setting, int get_response) {
 
 	HAL_StatusTypeDef status;
@@ -135,6 +161,10 @@ HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct AP
 
 }
 
+/**
+  * @brief  Receives and processes answer for read module type command.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Read_Module_Type(void) {
 
 	enum APC1_Status status;
@@ -143,8 +173,8 @@ enum APC1_Status APC1_Read_Module_Type(void) {
 		APC1_Error_Buffer_Append(error_buffer, 9);
 		return APC1_ERROR_CMD;
 	}
-	while (received_response == 0);
-	received_response = 0;
+	while (dev_settings.received_response == 0);
+	dev_settings.received_response = 0;
 
 	if ((status = APC1_Check_Checksum(SUM_OF_VALUES_FW, CHECKSUM_LOW_FW, CHECKSUM_HIGH_FW)) != APC1_OK) {
 		APC1_Error_Buffer_Append(error_buffer, 8);
@@ -156,18 +186,27 @@ enum APC1_Status APC1_Read_Module_Type(void) {
 
 }
 
+/**
+  * @brief  Receives and processes answer for measurement command.
+  * @note	This function is to be called when user wishes to get latest measurement from sensor.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Read_Mea_Data(void) {
 
 	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_READ_MEA_DATA], GET_RESPONSE) != HAL_OK) {
 		return APC1_ERROR_CMD;
 	}
-	while (received_response == 0);
-	received_response = 0;
+	while (dev_settings.received_response == 0);
+	dev_settings.received_response = 0;
 
 	return APC1_Process_Mea_Data();
 
 }
 
+/**
+  * @brief  Processes measurements received from sensor before being sent to user.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Process_Mea_Data(void) {
 
 	enum APC1_Status errorStat;
@@ -197,6 +236,13 @@ enum APC1_Status APC1_Process_Mea_Data(void) {
 
 }
 
+/**
+  * @brief  Check checksum of received data from sensor.
+  * @param	limit	Index of the last element + 1 which is to be used from the buffer.
+  * @param	low		Lower index of the byte representing checksum in the buffer.
+  * @param	high	Higher index of the byte representing checksum in the buffer.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Check_Checksum(int limit, int low, int high) {
 
 	int sum = 0;
@@ -208,6 +254,13 @@ enum APC1_Status APC1_Check_Checksum(int limit, int low, int high) {
 
 }
 
+/**
+  * @brief  Check for registered errors in the buffer.
+  * @note	Returns an integer where 0 indicated no error, 1 indicating one or more errors.
+  * 		Registered errors and their descriptions are found in the error buffer. The end
+  * 		of the error buffer is always terminated by a '\0' null terminator.
+  * @retval int
+  */
 int APC1_Check_For_Error(void) {
 
 	error_buffer[0] = '\0';
@@ -232,36 +285,54 @@ int APC1_Check_For_Error(void) {
 
 }
 
+/**
+  * @brief  Sets sensor to idle mode.
+  * @note	This function is to be used by the user to set sensor to idle mode.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Set_Idle_Mode(void) {
 
 	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_SET_IDLE_MODE], GET_RESPONSE) != HAL_OK) {
 		APC1_Error_Buffer_Append(error_buffer, 9);
 		return APC1_ERROR_CMD;
 	}
-	while (received_response == 0);
-	received_response = 0;
+	while (dev_settings.received_response == 0);
+	dev_settings.received_response = 0;
 
 	return APC1_Check_Command_Answer(command[APC1_CMD_SET_IDLE_MODE]);
 
 }
 
+/**
+  * @brief  Sets sensor to active communication mode.
+  * @note	This function is to be used by the user to set sensor to active communication mode.
+  * 		Sensor is to send 64B structure every second.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Set_Active_Comm_Mode(void) {
 
 	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_SET_ACTIVE_COMM], GET_RESPONSE) != HAL_OK) {
 		APC1_Error_Buffer_Append(error_buffer, 9);
 		return APC1_ERROR_CMD;
 	}
-	while (received_response == 0);
-	received_response = 0;
+	while (dev_settings.received_response == 0);
+	dev_settings.received_response = 0;
 	dev_settings.mode = APC1_ACTIVE_MODE;
 
 	return APC1_Check_Command_Answer(command[APC1_CMD_SET_ACTIVE_COMM]);
 
 }
 
-// TODO: still a mystery what happens in active mode
+/**
+  * @brief  Sets sensor to measurement mode.
+  * @note	This function is to be used by the user to set sensor to measurement mode.
+  * 		Depending on the mode of the sensor (active or passive) there is or isn't
+  * 		a response in the buffer.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Set_Mea_Mode(void) {
 
+// TODO: still a mystery what happens in active mode
 	// if device mode is ACTIVE, then there is a response, otherwise not
 	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_SET_MEA_MODE],
 		(dev_settings.mode) ? GET_RESPONSE : NO_RESPONSE) != HAL_OK) {
@@ -269,8 +340,8 @@ enum APC1_Status APC1_Set_Mea_Mode(void) {
 		return APC1_ERROR_CMD;
 	}
 	if (dev_settings.mode) {
-		while (received_response == 0);
-		received_response = 0;
+		while (dev_settings.received_response == 0);
+		dev_settings.received_response = 0;
 		return APC1_Process_Mea_Data();
 	}
 
@@ -278,20 +349,32 @@ enum APC1_Status APC1_Set_Mea_Mode(void) {
 
 }
 
+/**
+  * @brief  Sets sensor to passive communication mode.
+  * @note	This function is to be used by the user to set sensor to passive communication mode.
+  * 		Sensor is to send 64B structure on request by using the APC1_Read_Mea_Data function.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Set_Passive_Comm_Mode(void) {
 
 	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_SET_PASSIVE_COMM], GET_RESPONSE) != HAL_OK) {
 		APC1_Error_Buffer_Append(error_buffer, 9);
 		return APC1_ERROR_CMD;
 	}
-	while (received_response == 0);
-	received_response = 0;
+	while (dev_settings.received_response == 0);
+	dev_settings.received_response = 0;
 	dev_settings.mode = APC1_PASSIVE_MODE;
 
 	return APC1_Check_Command_Answer(command[APC1_CMD_SET_PASSIVE_COMM]);
 
 }
 
+/**
+  * @brief  Check sensor answer for executed command.
+  * @param	setting	Structure member describing the parameters of the executed command which
+  * 		are to be checked.
+  * @retval APC1 status
+  */
 enum APC1_Status APC1_Check_Command_Answer(struct APC1_Command_Settings setting) {
 
 	enum APC1_Status err;
@@ -311,120 +394,200 @@ enum APC1_Status APC1_Check_Command_Answer(struct APC1_Command_Settings setting)
 
 }
 
+/**
+  * @brief  Get PM1.0 mass concentration.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_PM1_0(void) {
 
 	return processed_data.pm1_0;
 
 }
 
+/**
+  * @brief  Get PM2.5 mass concentration.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_PM2_5(void) {
 
 	return processed_data.pm2_5;
 
 }
 
+/**
+  * @brief  Get PM10 mass concentration.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_PM10(void) {
 
 	return processed_data.pm10;
 
 }
 
+/**
+  * @brief  Get PM1.0 mass concentration in atmospheric environment.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_PM1_0_air(void) {
 
 	return processed_data.pm1_0_air;
 
 }
 
+/**
+  * @brief  Get PM2.5 mass concentration in atmospheric environment.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_PM2_5_air(void) {
 
 	return processed_data.pm2_5_air;
 
 }
 
+/**
+  * @brief  Get PM10 mass concentration in atmospheric environment.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_PM10_air(void) {
 
 	return processed_data.pm10_air;
 
 }
 
+/**
+  * @brief  Get number of particles with diameter > 0.3µm in 0.1L of air.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_Particles_GT_0_3(void) {
 
 	return processed_data.particles_0_3;
 
 }
 
+/**
+  * @brief  Get number of particles with diameter > 0.5µm in 0.1L of air.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_Particles_GT_0_5(void) {
 
 	return processed_data.particles_0_5 - processed_data.particles_0_3;
 
 }
 
+/**
+  * @brief  Get number of particles with diameter > 1.0µm in 0.1L of air.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_Particles_GT_1_0(void) {
 
 	return processed_data.particles_1_0 - processed_data.particles_0_3;
 
 }
 
+/**
+  * @brief  Get number of particles with diameter > 2.5µm in 0.1L of air.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_Particles_GT_2_5(void) {
 
 	return processed_data.particles_2_5 - processed_data.particles_0_3;
 
 }
 
+/**
+  * @brief  Get number of particles with diameter > 5.0µm in 0.1L of air.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_Particles_GT_5_0(void) {
 
 	return processed_data.particles_5_0 - processed_data.particles_0_3;
 
 }
 
+/**
+  * @brief  Get number of particles with diameter > 10µm in 0.1L of air.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_Particles_GT_10(void) {
 
 	return processed_data.particles_10 - processed_data.particles_0_3;
 
 }
 
+/**
+  * @brief  Get TVOC output.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_TVOC(void) {
 
 	return processed_data.TVOC;
 
 }
 
+/**
+  * @brief  Get output in ppm CO2 equivalents.
+  * @retval unsigned 16 bit value
+  */
 uint16_t APC1_Get_eCO2(void) {
 
 	return processed_data.eCO2;
 
 }
 
+/**
+  * @brief  Get compensated temperature in °C.
+  * @retval double
+  */
 double APC1_Get_T_Comp(void) {
 
 	return processed_data.t_comp * 0.1f;
 
 }
 
+/**
+  * @brief  Get compensated RH in %.
+  * @retval double
+  */
 double APC1_Get_RH_Comp(void) {
 
 	return processed_data.rh_comp * 0.1f;
 
 }
 
+/**
+  * @brief  Get uncompensated temperature in °C.
+  * @retval double
+  */
 double APC1_Get_T_Raw(void) {
 
 	return processed_data.t_raw * 0.1f;
 
 }
 
+/**
+  * @brief  Get uncompensated RH in %.
+  * @retval double
+  */
 double APC1_Get_RH_Raw(void) {
 
 	return processed_data.rh_raw * 0.1f;
 
 }
 
+/**
+  * @brief  Get Air Quality Index according to UBA Classification of TVOC value.
+  * @retval unsigned 8 bit value
+  */
 uint8_t	APC1_Get_AQI(void) {
 
 	return processed_data.aqi;
 
 }
 
+/**
+  * @brief  Get Air Quality Index according to UBA Classification of TVOC value as describing string.
+  * @retval char*
+  */
 const char *APC1_Get_AQI_String(void) {
 
 	// if somehow we get a wrong index
@@ -433,16 +596,24 @@ const char *APC1_Get_AQI_String(void) {
 
 }
 
+/**
+  * @brief  Get error value as describing string.
+  * @retval char*
+  */
 char *APC1_Get_Error_String(void) {
 
 	return error_buffer;
 
 }
 
+/**
+  * @brief  Full callback for USART receive by interrupt.
+  * @note	Sets flag indicating a full reception of values from sensor.
+  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
-	if (huart->Instance == USART1) {
-		received_response = 1;
+	if (huart == dev_settings.sensor_uart) {
+		dev_settings.received_response = 1;
 	}
 
 }

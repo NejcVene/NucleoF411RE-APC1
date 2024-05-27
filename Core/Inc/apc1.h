@@ -90,6 +90,7 @@ struct APC1_Mea_Data {
 
 struct APC1_Device_Settings {
 	UART_HandleTypeDef *sensor_uart;
+	volatile int received_response;
 	enum APC1_Mode mode;
 	uint8_t fw_vesion;
 };
