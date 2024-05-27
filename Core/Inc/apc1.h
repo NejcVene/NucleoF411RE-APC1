@@ -51,6 +51,7 @@ enum APC1_Status {
 	APC1_ERROR_RHT = 0b01000000,
 	APC1_ERROR_CRC = 0b10000000,
 	APC1_ERROR_CMD,
+	APC1_ERROR_NULL_POINTER
 };
 
 enum APC1_Commands {
@@ -88,10 +89,12 @@ struct APC1_Mea_Data {
 };
 
 struct APC1_Device_Settings {
+	UART_HandleTypeDef *sensor_uart;
 	enum APC1_Mode mode;
 	uint8_t fw_vesion;
 };
 
+enum APC1_Status APC1_Init_Sensor(UART_HandleTypeDef *huart);
 enum APC1_Status APC1_Read_Module_Type(void);
 enum APC1_Status APC1_Read_Mea_Data(void);
 enum APC1_Status APC1_Set_Idle_Mode(void);
@@ -119,8 +122,5 @@ double APC1_Get_RH_Raw(void);
 uint8_t	APC1_Get_AQI(void);
 const char *APC1_Get_AQI_String(void);
 char *APC1_Get_Error_String(void);
-
-extern void Error_Handler(void);
-extern UART_HandleTypeDef huart1;
 
 #endif /* INC_APC1_H_ */

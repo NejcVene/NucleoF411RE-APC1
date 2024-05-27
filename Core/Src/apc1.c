@@ -67,8 +67,8 @@ enum APC1_Status APC1_Process_Mea_Data(void);
 uint8_t buffer[BUFFER_SIZE];
 char error_buffer[BUFFER_SIZE];
 volatile int received_response;
+struct APC1_Device_Settings dev_settings;
 struct APC1_Mea_Data processed_data;
-struct APC1_Device_Settings dev_settings = {.mode = APC1_PASSIVE_MODE, .fw_vesion = 0};
 const char *APC1_AQI_Strings[5] = {
 		"Good",
 		"Fair",
@@ -103,6 +103,22 @@ const uint8_t APC1_Error_Masks[] = {
 		APC1_ERROR_CMD
 };
 
+enum APC1_Status APC1_Init_Sensor(UART_HandleTypeDef *huart) {
+
+	if (huart == NULL) {
+		return APC1_ERROR_NULL_POINTER;
+	}
+
+	dev_settings = (struct APC1_Device_Settings) {
+			.sensor_uart = huart,
+			.mode = APC1_PASSIVE_MODE,
+			.fw_vesion = 0
+	};
+
+	return APC1_OK;
+
+}
+
 HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct APC1_Command_Settings setting, int get_response) {
 
 	HAL_StatusTypeDef status;
@@ -123,7 +139,7 @@ enum APC1_Status APC1_Read_Module_Type(void) {
 
 	enum APC1_Status status;
 
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_READ_MODULE_TYPE], GET_RESPONSE) != HAL_OK) {
+	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_READ_MODULE_TYPE], GET_RESPONSE) != HAL_OK) {
 		APC1_Error_Buffer_Append(error_buffer, 9);
 		return APC1_ERROR_CMD;
 	}
@@ -142,7 +158,7 @@ enum APC1_Status APC1_Read_Module_Type(void) {
 
 enum APC1_Status APC1_Read_Mea_Data(void) {
 
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_READ_MEA_DATA], GET_RESPONSE) != HAL_OK) {
+	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_READ_MEA_DATA], GET_RESPONSE) != HAL_OK) {
 		return APC1_ERROR_CMD;
 	}
 	while (received_response == 0);
@@ -218,7 +234,7 @@ int APC1_Check_For_Error(void) {
 
 enum APC1_Status APC1_Set_Idle_Mode(void) {
 
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_IDLE_MODE], GET_RESPONSE) != HAL_OK) {
+	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_SET_IDLE_MODE], GET_RESPONSE) != HAL_OK) {
 		APC1_Error_Buffer_Append(error_buffer, 9);
 		return APC1_ERROR_CMD;
 	}
@@ -231,7 +247,7 @@ enum APC1_Status APC1_Set_Idle_Mode(void) {
 
 enum APC1_Status APC1_Set_Active_Comm_Mode(void) {
 
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_ACTIVE_COMM], GET_RESPONSE) != HAL_OK) {
+	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_SET_ACTIVE_COMM], GET_RESPONSE) != HAL_OK) {
 		APC1_Error_Buffer_Append(error_buffer, 9);
 		return APC1_ERROR_CMD;
 	}
@@ -247,7 +263,7 @@ enum APC1_Status APC1_Set_Active_Comm_Mode(void) {
 enum APC1_Status APC1_Set_Mea_Mode(void) {
 
 	// if device mode is ACTIVE, then there is a response, otherwise not
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_MEA_MODE],
+	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_SET_MEA_MODE],
 		(dev_settings.mode) ? GET_RESPONSE : NO_RESPONSE) != HAL_OK) {
 		APC1_Error_Buffer_Append(error_buffer, 9);
 		return APC1_ERROR_CMD;
@@ -264,7 +280,7 @@ enum APC1_Status APC1_Set_Mea_Mode(void) {
 
 enum APC1_Status APC1_Set_Passive_Comm_Mode(void) {
 
-	if (APC1_Send_Receive_Command(&huart1, command[APC1_CMD_SET_PASSIVE_COMM], GET_RESPONSE) != HAL_OK) {
+	if (APC1_Send_Receive_Command(dev_settings.sensor_uart, command[APC1_CMD_SET_PASSIVE_COMM], GET_RESPONSE) != HAL_OK) {
 		APC1_Error_Buffer_Append(error_buffer, 9);
 		return APC1_ERROR_CMD;
 	}

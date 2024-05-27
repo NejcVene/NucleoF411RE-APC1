@@ -99,6 +99,8 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  APC1_Init_Sensor(&huart1);
+
   // HAL_Delay(10000);
   // APC1_Set_Idle_Mode();
   // HAL_Delay(10000);
