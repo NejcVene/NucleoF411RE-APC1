@@ -101,33 +101,7 @@ int main(void)
 
   APC1_Init_Sensor(&huart1);
 
-  // HAL_Delay(10000);
-  // APC1_Set_Idle_Mode();
-  // HAL_Delay(10000);
-  // APC1_Set_Mea_Mode();
-  // HAL_Delay(2000);
-  // if (APC1_Read_Module_Type() != APC1_OK)
-  //	  Error_Handler();
-  //if (APC1_Set_Active_Comm_Mode() != APC1_OK)
-  //Error_Handler();
-  // APC1_Read_Module_Type();
-
-  // if (APC1_Read_Mea_Data() != APC1_OK) {
-//	  Error_Handler();
-  //}
-
-  // remove later
-  // HAL_Delay(3000);
-  /*
-  uint8_t rx[50] = {0};
-  uint8_t tx[] = {0x42, 0x4D, 0xE9, 0x00, 0x00, 0x01, 0x78}; // {0xCA, 0xFE, 0x00, 0xBA, 0xBE};
-  if (HAL_UART_Receive_IT(&huart1, rx, 23) != HAL_OK) {
-	  Error_Handler();
-  }
-  if (HAL_UART_Transmit(&huart1, tx, sizeof(tx), 2000) != HAL_OK) {
-  	  Error_Handler();
-  }
-	*/
+  APC1_Read_Module_Type();
 
   /* USER CODE END 2 */
 
@@ -248,7 +222,6 @@ static void MX_USART1_UART_Init(void)
 }
 
 /**
-  * @brief GPIO Initialization Function
   * @param None
   * @retval None
   */

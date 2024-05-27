@@ -103,18 +103,6 @@ const uint8_t APC1_Error_Masks[] = {
 };
 
 /**
-  * @brief  Receives an amount of data in non blocking mode.
-  * @note   When UART parity is not enabled (PCE = 0), and Word Length is configured to 9 bits (M1-M0 = 01),
-  *         the received data is handled as a set of u16. In this case, Size must indicate the number
-  *         of u16 available through pData.
-  * @param  huart Pointer to a UART_HandleTypeDef structure that contains
-  *               the configuration information for the specified UART module.
-  * @param  pData Pointer to data buffer (u8 or u16 data elements).
-  * @param  Size  Amount of data elements (u8 or u16) to be received.
-  * @retval HAL status
-  */
-
-/**
   * @brief  Initializes the APC1 sensor.
   * @param  huart Pointer to a UART_HandleTypeDef structure that contains
   *               the configuration information for the specified UART module.
@@ -163,6 +151,9 @@ HAL_StatusTypeDef APC1_Send_Receive_Command(UART_HandleTypeDef *huart, struct AP
 
 /**
   * @brief  Receives and processes answer for read module type command.
+  * @note	Depending on the firmware version of the sensor this command is supported or not.
+  * 		Versions prior to 35 DO NOT support it. In such case, this function will hang
+  * 		in the while loop waiting for a response which will not occur.
   * @retval APC1 status
   */
 enum APC1_Status APC1_Read_Module_Type(void) {
