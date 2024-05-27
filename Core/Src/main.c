@@ -99,9 +99,13 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  APC1_Init_Sensor(&huart1);
+  if (APC1_Init_Sensor(&huart1) != APC1_OK) {
+	  Error_Handler();
+  }
 
-  APC1_Read_Module_Type();
+  if (APC1_Read_Module_Type() != APC1_OK) {
+	  Error_Handler();
+  }
 
   /* USER CODE END 2 */
 
