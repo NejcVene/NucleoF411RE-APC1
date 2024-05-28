@@ -13,7 +13,7 @@
 
 ## Introduction
 
-The **ScioSence APC1 library for STM ** is a library designed to work with the ScioSense APC1 sensor on STM boards. It provides a unified API to read data
+The **ScioSence APC1 library for STM** is a library designed to work with the ScioSense APC1 sensor on STM boards. It provides a unified API to read data
 and send commands. Tested working on NucleoF411RE and STM32H750B-DK.
 
 ## Features
