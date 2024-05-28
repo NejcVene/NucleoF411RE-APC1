@@ -86,7 +86,8 @@ const char *APC1_Status_Strings[] = {
 		"APC1_ERROR_VOC",
 		"APC1_ERROR_RHT",
 		"APC1_ERROR_CRC",
-		"APC1_ERROR_CMD"
+		"APC1_ERROR_CMD",
+		"APC1_ERROR_NULL_POINTER"
 };
 
 const uint8_t APC1_Error_Masks[] = {
@@ -99,7 +100,8 @@ const uint8_t APC1_Error_Masks[] = {
 		APC1_ERROR_VOC,
 		APC1_ERROR_RHT,
 		APC1_ERROR_CRC,
-		APC1_ERROR_CMD
+		APC1_ERROR_CMD,
+		APC1_ERROR_NULL_POINTER
 };
 
 /**
@@ -111,6 +113,7 @@ const uint8_t APC1_Error_Masks[] = {
 enum APC1_Status APC1_Init_Sensor(UART_HandleTypeDef *huart) {
 
 	if (huart == NULL) {
+		APC1_Error_Buffer_Append(error_buffer, 10);
 		return APC1_ERROR_NULL_POINTER;
 	}
 
@@ -258,8 +261,8 @@ int APC1_Check_For_Error(void) {
 	uint8_t status = buffer[ERROR_OUTPUT_REGISTER];
 
 	if (status == APC1_OK) {
-		strcat(error_buffer, APC1_Status_Strings[0]);
-		error_buffer[strlen(error_buffer) - 1] = '\0';
+		APC1_Error_Buffer_Append(error_buffer, 0);
+		error_buffer[strlen(error_buffer)] = '\0';
 	} else {
 		for (int i = 0; i<NUM_OF_ERRORS; i++) {
 			if (status & APC1_Error_Masks[i]) {
