@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+// import library
 #include "apc1.h"
 
 /* USER CODE END Includes */
@@ -32,6 +33,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+// define variables
 uint16_t 	 T_pm1_0, T_pm2_5, T_pm10,
   	  	  	 T_pm1_0_air, T_pm2_5_air, T_pm10_air,
 			 T_particles_0_3, T_particles_0_5, T_particles_1_0,
@@ -40,7 +43,8 @@ uint16_t 	 T_pm1_0, T_pm2_5, T_pm10,
 double T_t_comp, T_rh_comp, T_t_raw, T_rh_raw;
 const char *aqi_string;
 const char *error_string;
-  uint8_t T_aqi;
+uint8_t T_aqi;
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -99,13 +103,21 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  /*
+   * Example program to initialize sensor
+   * and read measurement data every two seconds.
+   */
+
+  // Initialize sensor
   if (APC1_Init_Sensor(&huart1) != APC1_OK) {
 	  Error_Handler();
   }
 
+  /* If supported, then this command will run. See note.
   if (APC1_Read_Module_Type() != APC1_OK) {
 	  Error_Handler();
   }
+  */
 
   /* USER CODE END 2 */
 
@@ -113,6 +125,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  // get latest measurement data
 	  if (APC1_Read_Mea_Data() != APC1_OK) {
 		  Error_Handler();
 	  }
@@ -276,6 +289,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+	  // if error occurs, then read its string
 	  error_string = APC1_Get_Error_String();
   }
   /* USER CODE END Error_Handler_Debug */
