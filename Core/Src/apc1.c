@@ -174,7 +174,7 @@ enum APC1_Status APC1_Read_Module_Type(void) {
 		APC1_Error_Buffer_Append(error_buffer, 8);
 		return status;
 	}
-	dev_settings.fw_vesion = buffer[FW_ANSWER_FW_VERSION];
+	dev_settings.fw_vesion = APC1_Convert(buffer[FW_ANSWER_FW_VERSION], buffer[FW_ANSWER_FW_VERSION + 1]);
 
 	return status;
 

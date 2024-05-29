@@ -124,7 +124,7 @@ Discarded input sections
  .data          0x00000000        0x0 ./Core/Src/apc1.o
  .bss           0x00000000        0x0 ./Core/Src/apc1.o
  .text.APC1_Read_Module_Type
-                0x00000000       0x88 ./Core/Src/apc1.o
+                0x00000000       0x98 ./Core/Src/apc1.o
  .text.APC1_Set_Idle_Mode
                 0x00000000       0x64 ./Core/Src/apc1.o
  .text.APC1_Set_Active_Comm_Mode
