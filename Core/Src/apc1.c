@@ -601,6 +601,27 @@ char *APC1_Get_Error_String(void) {
 }
 
 /**
+  * @brief  Get sensor firmware version.
+  * @retval unsigned 8 bit value
+  */
+uint8_t APC1_Get_FW_Version(void) {
+
+	return dev_settings.fw_vesion;
+
+}
+
+/**
+  * @brief  Get pointer to measured data from sensor.
+  * @note	The measured data is already processed.
+  * @retval struct APC1_Mea_Data*
+  */
+struct APC1_Mea_Data *APC1_Get_Struct_Mea_Data_Handle(void) {
+
+	return &processed_data;
+
+}
+
+/**
   * @brief  Full callback for USART receive by interrupt.
   * @note	Sets flag indicating a full reception of values from sensor.
   */

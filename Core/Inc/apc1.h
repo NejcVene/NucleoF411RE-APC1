@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#define	API_VERSION	1.0
+
 #define APC1_Convert(low, high)			(((uint16_t) low << 8) | high)
 #define APC1_Error_Buffer_Append(buffer, index)	strcat(buffer, APC1_Status_Strings[index])
 
@@ -123,5 +125,7 @@ double APC1_Get_RH_Raw(void);
 uint8_t	APC1_Get_AQI(void);
 const char *APC1_Get_AQI_String(void);
 char *APC1_Get_Error_String(void);
+uint8_t APC1_Get_FW_Version(void);
+struct APC1_Mea_Data *APC1_Get_Struct_Mea_Data_Handle(void);
 
 #endif /* INC_APC1_H_ */
